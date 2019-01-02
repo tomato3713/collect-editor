@@ -35,41 +35,52 @@ func main() {
 
 	buf.draw()
 
+	// poll for keyboard events in another goroutine
+	events := make(chan termbox.Event, 1000)
+	go func() {
+		for {
+			events <- termbox.PollEvent()
+		}
+	}()
+
 mainloop:
 	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			switch ev.Key {
-			case termbox.KeyEnter:
-				buf.lineFeed()
-			// mac delete-key is this
-			case termbox.KeyCtrlH:
-				fallthrough
-			case termbox.KeyBackspace2:
-				buf.backSpace()
-			case termbox.KeyArrowUp:
-				buf.moveCursor(Up)
-			case termbox.KeyArrowDown:
-				buf.moveCursor(Down)
-			case termbox.KeyArrowLeft:
-				buf.moveCursor(Left)
-			case termbox.KeyArrowRight:
-				buf.moveCursor(Right)
-			case termbox.KeyCtrlZ:
-				buf.undo()
-			case termbox.KeyCtrlY:
-				buf.redo()
-			case termbox.KeyCtrlS:
-				buf.writeBufToFile()
-			case termbox.KeyCtrlC:
-				break mainloop
-			default:
-				buf.insertChr(ev.Ch)
+		select {
+		case ev := <-events:
+			if ev.Type == termbox.EventKey {
+				switch ev.Key {
+				case termbox.KeyEnter:
+					buf.lineFeed()
+					// mac delete-key is this
+				case termbox.KeyCtrlH:
+					fallthrough
+				case termbox.KeyBackspace2:
+					buf.backSpace()
+				case termbox.KeyArrowUp:
+					buf.moveCursor(Up)
+				case termbox.KeyArrowDown:
+					buf.moveCursor(Down)
+				case termbox.KeyArrowLeft:
+					buf.moveCursor(Left)
+				case termbox.KeyArrowRight:
+					buf.moveCursor(Right)
+				case termbox.KeyCtrlZ:
+					buf.undo()
+				case termbox.KeyCtrlY:
+					buf.redo()
+				case termbox.KeyCtrlS:
+					buf.writeBufToFile()
+				case termbox.KeyCtrlC:
+					break mainloop // 実行終了
+				default:
+					buf.insertChr(ev.Ch)
+				}
 			}
+			// when entered any key, redraw buffer
+			buf.draw()
+		default:
+			// Nothing
 		}
-
-		// when entered any key, redraw buffer
-		buf.draw()
 	}
 }
 
