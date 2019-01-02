@@ -4,11 +4,11 @@ package main
 type Mode int
 
 // Move is mode for cursor moving
-// Insert is mode for text inserting
+// Edit is mode for text editing
 // Visual is mode for text selecting
 const (
 	Move Mode = iota
-	Insert
+	Edit
 	Visual
 )
 
@@ -17,8 +17,8 @@ func (m Mode) String() string {
 	switch m {
 	case Move:
 		return "Move"
-	case Insert:
-		return "Insert"
+	case Edit:
+		return "Edit"
 	case Visual:
 		return "Visual"
 	default:
