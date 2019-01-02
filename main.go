@@ -31,9 +31,9 @@ func main() {
 		buf.readFileToBuf(file)
 	}
 
-	mode := Move
+	//mode := Move
 
-	buf.redraw()
+	buf.draw()
 
 mainloop:
 	for {
@@ -69,7 +69,7 @@ mainloop:
 		}
 
 		// when entered any key, redraw buffer
-		buf.redraw()
+		buf.draw()
 	}
 }
 

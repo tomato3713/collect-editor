@@ -253,7 +253,7 @@ func (b *buffer) getlastlinenum() int {
 	return len(b.lines)
 }
 
-func (b *buffer) redraw() {
+func (b *buffer) draw() {
 	b.updateLines()
 	b.updateCursor()
 	b.pushBufToUndoRedoBuffer()
