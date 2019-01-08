@@ -5,7 +5,7 @@ import (
 )
 
 func TestSplitAlphabet(t *testing.T) {
-	buf := new(buffer)
+	buf := new(Buffer)
 	buf.lines = []*line{&line{[]rune{}}}
 	alphabet := "abcdefg"
 	for _, c := range alphabet {
@@ -20,7 +20,7 @@ func TestSplitAlphabet(t *testing.T) {
 }
 
 func TestSplitCJK(t *testing.T) {
-	buf := new(buffer)
+	buf := new(Buffer)
 	buf.lines = []*line{&line{[]rune{}}}
 	cjk := "南無阿弥陀仏"
 	for _, c := range cjk {
@@ -35,7 +35,7 @@ func TestSplitCJK(t *testing.T) {
 }
 
 func TestMoveCursor(t *testing.T) {
-	buf := new(buffer)
+	buf := new(Buffer)
 	buf.lines = []*line{&line{[]rune{}}}
 	str1 := "123456"
 	for _, c := range str1 {
@@ -103,7 +103,7 @@ func TestMoveCursor(t *testing.T) {
 }
 
 func TestGetline(t *testing.T) {
-	buf := new(buffer)
+	buf := new(Buffer)
 	buf.lines = []*line{&line{[]rune{}}}
 	str1 := "123456あいうえお"
 	for _, c := range str1 {
@@ -138,7 +138,7 @@ func TestGetline(t *testing.T) {
 }
 
 func TestGetLastLine(t *testing.T) {
-	buf := new(buffer)
+	buf := new(Buffer)
 	buf.lines = []*line{&line{[]rune{}}}
 	str1 := "123456あいうえお"
 	for _, c := range str1 {

@@ -6,8 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-
-	termbox "github.com/nsf/termbox-go"
 )
 
 const (
@@ -17,7 +15,7 @@ const (
 	Right
 )
 
-type buffer struct {
+type Buffer struct {
 	cursor   cursor
 	lines    []*line
 	filename string
@@ -35,10 +33,10 @@ type line struct {
 }
 
 type bufStack struct {
-	bufs []*buffer
+	bufs []*Buffer
 }
 
-func (b *buffer) lineFeed() {
+func (b *Buffer) lineFeed() {
 	p := b.cursor.y + 1
 	// split line by the cursor and store these
 	fh, lh := b.lines[b.cursor.y].split(b.cursor.x)
@@ -56,7 +54,7 @@ func (b *buffer) lineFeed() {
 	b.cursor.y++
 }
 
-func (b *buffer) backSpace() {
+func (b *Buffer) backSpace() {
 	if b.cursor.x == 0 && b.cursor.y == 0 {
 		// nothing to do
 	} else {
@@ -77,7 +75,7 @@ func (b *buffer) backSpace() {
 	}
 }
 
-func (b *buffer) insertChr(r rune) {
+func (b *Buffer) insertChr(r rune) {
 	b.lines[b.cursor.y].insertChr(r, b.cursor.x)
 	b.cursor.x++
 }
@@ -94,16 +92,7 @@ func (l *line) deleteChr(p int) {
 	l.text = append(l.text[:p], l.text[p+1:]...)
 }
 
-func (b *buffer) updateLines() {
-	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
-	for y, l := range b.lines {
-		for x, r := range l.text {
-			termbox.SetCell(x, y, r, termbox.ColorWhite, termbox.ColorBlack)
-		}
-	}
-}
-
-func (b *buffer) moveCursor(d int) {
+func (b *Buffer) moveCursor(d int) {
 	switch d {
 	case Up:
 		// guard of top "rows"
@@ -151,11 +140,7 @@ func (b *buffer) moveCursor(d int) {
 	}
 }
 
-func (b *buffer) updateCursor() {
-	termbox.SetCursor(b.cursor.x, b.cursor.y)
-}
-
-func (b *buffer) linenum() int {
+func (b *Buffer) linenum() int {
 	return len(b.lines)
 }
 
@@ -171,8 +156,8 @@ func (l *line) joint() *line {
 	return nil
 }
 
-func (b *buffer) pushBufToUndoRedoBuffer() {
-	tb := new(buffer)
+func (b *Buffer) pushBufToUndoRedoBuffer() {
+	tb := new(Buffer)
 	tb.cursor.x = b.cursor.x
 	tb.cursor.y = b.cursor.y
 	for i, l := range b.lines {
@@ -183,7 +168,7 @@ func (b *buffer) pushBufToUndoRedoBuffer() {
 	b.undoBuf.bufs = append(b.undoBuf.bufs, tb)
 }
 
-func (b *buffer) undo() {
+func (b *Buffer) undo() {
 	if len(b.undoBuf.bufs) == 0 {
 		return
 	}
@@ -202,7 +187,7 @@ func (b *buffer) undo() {
 	}
 }
 
-func (b *buffer) redo() {
+func (b *Buffer) redo() {
 	if len(b.redoBuf.bufs) == 0 {
 		return
 	}
@@ -217,7 +202,7 @@ func (b *buffer) redo() {
 	}
 }
 
-func (b *buffer) readFileToBuf(reader io.Reader) error {
+func (b *Buffer) readFileToBuf(reader io.Reader) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		l := new(line)
@@ -230,7 +215,7 @@ func (b *buffer) readFileToBuf(reader io.Reader) error {
 	return nil
 }
 
-func (b *buffer) writeBufToFile() {
+func (b *Buffer) writeBufToFile() {
 	content := make([]byte, 1024)
 	for _, l := range b.lines {
 		l.text = append(l.text, '\n')
@@ -239,7 +224,7 @@ func (b *buffer) writeBufToFile() {
 	ioutil.WriteFile(b.filename, content, os.ModePerm)
 }
 
-func (b *buffer) getline(n int) ([]rune, error) {
+func (b *Buffer) getline(n int) ([]rune, error) {
 	if n < 0 {
 		return []rune{}, errors.New("outsideLineNumber")
 	}
@@ -249,19 +234,12 @@ func (b *buffer) getline(n int) ([]rune, error) {
 	return b.lines[n].text, nil
 }
 
-func (b *buffer) getlastlinenum() int {
+func (b *Buffer) getlastlinenum() int {
 	return len(b.lines)
 }
 
-func (b *buffer) draw() {
-	b.updateLines()
-	b.updateCursor()
-	b.pushBufToUndoRedoBuffer()
-	termbox.Flush()
-}
-
-func newbuffer() *buffer {
-	buf := new(buffer)
+func newbuffer() *Buffer {
+	buf := new(Buffer)
 	buf.redoBuf = &bufStack{}
 	buf.undoBuf = &bufStack{}
 	buf.filename = ""

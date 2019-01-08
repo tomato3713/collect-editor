@@ -8,32 +8,41 @@ import (
 	termbox "github.com/nsf/termbox-go"
 )
 
+var (
+	mode Mode
+
+	bufs *Buffer
+
+	cmdLineWin CmdLineWin
+	bufWins    BufferWin
+)
+
 func main() {
-	buf := newbuffer()
-	fmt.Print(len(os.Args))
-	if len(os.Args) > 1 {
-		buf.filename = os.Args[1]
-	}
 	if err := startUp(); err != nil {
 		log.Fatal(err)
 	}
-
 	defer termbox.Close()
 
-	if buf.filename == "" {
-		buf.lines = []*line{&line{[]rune{}}}
-		buf.filename = "newfile.txt"
+	mode = Move
+	bufs = newbuffer()
+	bufWins.buf = bufs
+	fmt.Print(len(os.Args))
+	if len(os.Args) > 1 {
+		bufs.filename = os.Args[1]
+	}
+
+	if bufs.filename == "" {
+		bufs.lines = []*line{&line{[]rune{}}}
+		bufs.filename = "newfile.txt"
 	} else {
-		file, err := os.Open(buf.filename)
+		file, err := os.Open(bufs.filename)
 		if err != nil {
 			log.Fatal(err)
 		}
-		buf.readFileToBuf(file)
+		bufs.readFileToBuf(file)
 	}
 
-	mode := Move
-
-	buf.draw()
+	screenPaint()
 
 	// poll for keyboard events in another goroutine
 	events := make(chan termbox.Event, 1000)
@@ -54,15 +63,15 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyArrowUp:
-						buf.moveCursor(Up)
+						bufs.moveCursor(Up)
 					case termbox.KeyArrowDown:
-						buf.moveCursor(Down)
+						bufs.moveCursor(Down)
 					case termbox.KeyArrowLeft:
-						buf.moveCursor(Left)
+						bufs.moveCursor(Left)
 					case termbox.KeyArrowRight:
-						buf.moveCursor(Right)
+						bufs.moveCursor(Right)
 					case termbox.KeyCtrlS:
-						buf.writeBufToFile()
+						bufs.writeBufToFile()
 					case termbox.KeyCtrlC:
 						break mainloop // 実行終了
 					default:
@@ -71,9 +80,9 @@ mainloop:
 					case 'i':
 						mode = Edit
 					case 'u':
-						buf.undo()
+						bufs.undo()
 					case 'r':
-						buf.redo()
+						bufs.redo()
 					default:
 					}
 				}
@@ -83,18 +92,18 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyEnter:
-						buf.lineFeed()
+						bufs.lineFeed()
 						// mac delete-key is this
 					case termbox.KeyCtrlH:
 						fallthrough
 					case termbox.KeyBackspace2:
-						buf.backSpace()
+						bufs.backSpace()
 					case termbox.KeyCtrlZ:
-						buf.undo()
-					case termbox.KeyCtrlY:
-						buf.redo()
+						bufs.undo()
+					case termbox.KeyCtrlR:
+						bufs.redo()
 					default:
-						buf.insertChr(ev.Ch)
+						bufs.insertChr(ev.Ch)
 					}
 				}
 			case Visual:
@@ -107,7 +116,7 @@ mainloop:
 			default:
 			}
 			// when entered any key, redraw buffer
-			buf.draw()
+			screenPaint()
 		default:
 			// Nothing
 		}
@@ -121,5 +130,25 @@ func startUp() error {
 	}
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	termbox.SetCursor(0, 0)
+
+	width, height := termbox.Size()
+	// Set CmdLineWin default value
+	cmdLineWin.coord.x = 0
+	cmdLineWin.coord.y = height - cmdLineHeight
+	cmdLineWin.size.width = width
+	cmdLineWin.size.height = cmdLineHeight
+
+	// Set bufWins default value
+	bufWins.coord.x = 0
+	bufWins.coord.y = 0
+	bufWins.size.width = width
+	bufWins.size.height = height - cmdLineHeight
 	return nil
+}
+
+func screenPaint() {
+	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
+	bufWins.draw()
+	cmdLineWin.draw()
+	termbox.Flush()
 }
