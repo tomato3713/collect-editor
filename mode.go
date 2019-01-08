@@ -10,6 +10,7 @@ const (
 	Move Mode = iota
 	Edit
 	Visual
+	Cmd
 )
 
 // Mode has Stringer Interface
@@ -21,6 +22,8 @@ func (m Mode) String() string {
 		return "Edit"
 	case Visual:
 		return "Visual"
+	case Cmd:
+		return "Cmd"
 	default:
 		return "Unknown"
 	}
