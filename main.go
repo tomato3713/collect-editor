@@ -11,7 +11,8 @@ import (
 var (
 	mode Mode
 
-	bufs *Buffer
+	bufs       *Buffer
+	cmdLineBuf *Buffer
 
 	cmdLineWin CmdLineWin
 	bufWins    BufferWin
@@ -25,14 +26,15 @@ func main() {
 
 	mode = Move
 	bufs = newbuffer()
+	cmdLineBuf = newbuffer()
 	bufWins.buf = bufs
+	cmdLineWin.buf = cmdLineBuf
 	fmt.Print(len(os.Args))
 	if len(os.Args) > 1 {
 		bufs.filename = os.Args[1]
 	}
 
 	if bufs.filename == "" {
-		bufs.lines = []*line{&line{[]rune{}}}
 		bufs.filename = "newfile.txt"
 	} else {
 		file, err := os.Open(bufs.filename)
@@ -77,6 +79,9 @@ mainloop:
 					default:
 					}
 					switch ev.Ch {
+					case ':':
+						mode = Cmd
+						cmdLineWin.focus()
 					case 'i':
 						mode = Edit
 					case 'u':
@@ -113,6 +118,15 @@ mainloop:
 						mode = Move
 					}
 				}
+			case Cmd:
+				if ev.Type == termbox.EventKey {
+					switch ev.Key {
+					case termbox.KeyEsc:
+						mode = Move
+					default:
+						cmdLineBuf.insertChr(ev.Ch)
+					}
+				}
 			default:
 			}
 			// when entered any key, redraw buffer
@@ -143,6 +157,7 @@ func startUp() error {
 	bufWins.coord.y = 0
 	bufWins.size.width = width
 	bufWins.size.height = height - cmdLineHeight
+	bufWins.stsLineHeight = 1
 	return nil
 }
 
@@ -150,5 +165,11 @@ func screenPaint() {
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	bufWins.draw()
 	cmdLineWin.draw()
+
+	if mode.equal(Cmd) {
+		cmdLineWin.updateCursor()
+	} else {
+		bufWins.updateCursor()
+	}
 	termbox.Flush()
 }

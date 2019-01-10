@@ -5,8 +5,7 @@ import (
 )
 
 func TestSplitAlphabet(t *testing.T) {
-	buf := new(Buffer)
-	buf.lines = []*line{&line{[]rune{}}}
+	buf := newbuffer()
 	alphabet := "abcdefg"
 	for _, c := range alphabet {
 		buf.insertChr(rune(c))
@@ -20,8 +19,7 @@ func TestSplitAlphabet(t *testing.T) {
 }
 
 func TestSplitCJK(t *testing.T) {
-	buf := new(Buffer)
-	buf.lines = []*line{&line{[]rune{}}}
+	buf := newbuffer()
 	cjk := "南無阿弥陀仏"
 	for _, c := range cjk {
 		buf.insertChr(rune(c))
@@ -35,27 +33,26 @@ func TestSplitCJK(t *testing.T) {
 }
 
 func TestMoveCursor(t *testing.T) {
-	buf := new(Buffer)
-	buf.lines = []*line{&line{[]rune{}}}
+	buf := newbuffer()
 	str1 := "123456"
 	for _, c := range str1 {
 		buf.insertChr(rune(c))
 	}
 	buf.moveCursor(Up)
-	if buf.cursor.y != 0 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Up), expected: 0,6, fact: %v,%v", buf.cursor.x, buf.cursor.y)
+	if buf.cursor.x != 6 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Up), expected: 6,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Down)
-	if buf.cursor.y != 0 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Up), expected: 0,6, fact: %v,%v", buf.cursor.x, buf.cursor.y)
+	if buf.cursor.x != 6 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Up), expected: 6,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Right)
-	if buf.cursor.y != 0 && buf.cursor.x != 6 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,6, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 6 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 6,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Left)
-	if buf.cursor.y != 0 && buf.cursor.x != 5 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,5, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 5 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 5,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Left)
 	buf.moveCursor(Left)
@@ -64,31 +61,31 @@ func TestMoveCursor(t *testing.T) {
 	buf.moveCursor(Left)
 	buf.moveCursor(Left)
 	buf.moveCursor(Left)
-	if buf.cursor.y != 0 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,0, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 0 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 0,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Right)
-	if buf.cursor.y != 0 && buf.cursor.x != 1 {
-		t.Fatalf("failed test moveCursor(Down), expected: 1,0, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 1 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 1,0(x, y), fact: %v", buf.cursor)
 	}
 	buf.lineFeed()
 	//  1
 	//  23456
 	// ^ cursor
-	if buf.cursor.y != 1 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,1, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 0 && buf.cursor.y != 1 {
+		t.Fatalf("failed test moveCursor(Down), expected: 0,1(x, y), fact: %v", buf.cursor)
 	}
 	buf.moveCursor(Up)
-	if buf.cursor.y != 0 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,0, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 0 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 0,0(x, y), fact: %v", buf.cursor)
 	}
 
 	buf.moveCursor(Down)
 	buf.moveCursor(Right)
 	buf.moveCursor(Right)
 	buf.moveCursor(Up)
-	if buf.cursor.y != 0 && buf.cursor.x != 0 {
-		t.Fatalf("failed test moveCursor(Down), expected: 0,0, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 0 && buf.cursor.y != 0 {
+		t.Fatalf("failed test moveCursor(Down), expected: 0,0(x, y), fact: %v", buf.cursor)
 	}
 	str2 := "abcdefg"
 	for _, c := range str2 {
@@ -97,14 +94,19 @@ func TestMoveCursor(t *testing.T) {
 	// abcdefg1
 	// 23456
 	buf.moveCursor(Down)
-	if buf.cursor.y != 1 && buf.cursor.x != 5 {
-		t.Fatalf("failed test moveCursor(Down), expected: 5,1, fact: %v", buf.cursor.y)
+	if buf.cursor.x != 5 && buf.cursor.y != 1 {
+		t.Fatalf("failed test moveCursor(Down), expected: 5,1, fact: %v", buf.cursor)
 	}
 }
 
 func TestGetline(t *testing.T) {
-	buf := new(Buffer)
-	buf.lines = []*line{&line{[]rune{}}}
+	buf := newbuffer()
+	if str, err := buf.getline(0); err != nil {
+		if string(str) != "" {
+			t.Fatalf("failed test getline(0), expected: '', fact: %v", string(str))
+		}
+	}
+
 	str1 := "123456あいうえお"
 	for _, c := range str1 {
 		buf.insertChr(rune(c))
@@ -138,8 +140,11 @@ func TestGetline(t *testing.T) {
 }
 
 func TestGetLastLine(t *testing.T) {
-	buf := new(Buffer)
-	buf.lines = []*line{&line{[]rune{}}}
+	buf := newbuffer()
+	// バッファに何も書き込まれていない場合
+	if buf.getlastlinenum() != 1 {
+		t.Fatalf("failed test getlastlinenum(), expected: 1, fact: %v", buf.getlastlinenum())
+	}
 	str1 := "123456あいうえお"
 	for _, c := range str1 {
 		buf.insertChr(rune(c))
@@ -159,5 +164,198 @@ func TestGetLastLine(t *testing.T) {
 	}
 	if buf.getlastlinenum() != 2 {
 		t.Fatalf("failed test getlastlinenum(), expected: 2, fact: %v", buf.getlastlinenum())
+	}
+}
+
+func TestDeleteLine(t *testing.T) {
+	buf := newbuffer()
+	if err := buf.deleteLine(1); err != nil {
+		t.Fatalf("failed test deleteLine(), expected nil, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 1 {
+		t.Fatalf("failed test deleteLine(), expected 0, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.y != 0 || newCur.x != 0 {
+		t.Fatalf("failed test deleteLine(), expected 0,0 (x, y), fact: %v", newCur)
+	}
+
+	str1 := "12345あいうえ"
+	for _, c := range str1 {
+		buf.insertChr(rune(c))
+		buf.lineFeed()
+	}
+	buf.insertChr(rune('お'))
+
+	// カーソルよりも前にある行を削除
+	if err := buf.deleteLine(1); err != nil {
+		t.Fatalf("failed test deleteLine(), expected nil, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 9 {
+		t.Fatalf("failed test deleteLine(), expected 9, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.y != 8 || newCur.x != 1 {
+		t.Fatalf("failed test deleteLine(), expected 8,1(x, y), fact: %v", newCur)
+	}
+
+	buf.moveCursor(Up)
+	buf.moveCursor(Up)
+	buf.moveCursor(Up)
+
+	// カーソルより後ろの行を削除
+	if err := buf.deleteLine(7); err != nil {
+		t.Fatalf("failed test deleteLine(), expected nil, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 8 {
+		t.Fatalf("failed test deleteLine(), expected 8, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.x != 1 || newCur.y != 5 {
+		t.Fatalf("failed test deleteLine(), expected 1, 5(x, y), face: %v", newCur)
+	}
+
+	// カーソル行を削除
+	if err := buf.deleteLine(buf.cursor.y); err != nil {
+		t.Fatalf("failed test deleteLine(), expected nil, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 7 {
+		t.Fatalf("failed test deleteLine(), expected 7, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.x != 1 || newCur.y != 5 {
+		t.Fatalf("failed test deleteLine(), expected 1, 5(x, y), face: %v", newCur)
+	}
+
+	// 存在しない行を削除 1
+	if err := buf.deleteLine(100); err != ErrOutRange {
+		t.Fatalf("failed test deleteLine(), expected ErrOutRange, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 7 {
+		t.Fatalf("failed test deleteLine(), expected 7, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.x != 1 || newCur.y != 5 {
+		t.Fatalf("failed test deleteLine(), expected 1, 5(x, y), fact: %v", newCur)
+	}
+
+	// 存在しない行を削除 2
+	if err := buf.deleteLine(-1); err != ErrOutRange {
+		t.Fatalf("failed test deleteLine(), expected ErrOutRange, fact: %v", err)
+	}
+	if buf.getlastlinenum() != 7 {
+		t.Fatalf("failed test deleteLine(), expected 7, fact: %v", buf.getlastlinenum())
+	}
+	if newCur := buf.cursor; newCur.x != 1 || newCur.y != 5 {
+		t.Fatalf("failed test deleteLine(), expected 1, 5(x, y), fact: %v", newCur)
+	}
+}
+
+func TestUndoRedo(t *testing.T) {
+	buf := newbuffer()
+	buf.pushBufToUndoRedoBuffer()
+
+	// undo buffer が空の時
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err := buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "" {
+		t.Fatalf("failed test undo(), expected buffer: '', fact: %v", string(l))
+	}
+
+	// redo buffer が空の時
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "" {
+		t.Fatalf("failed test undo(), expected buffer: '', fact: %v", string(l))
+	}
+
+	alphabet := "abcdefg"
+	for _, c := range alphabet {
+		buf.insertChr(rune(c))
+		buf.pushBufToUndoRedoBuffer()
+	}
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "abcdef" {
+		t.Fatalf("failed test undo(), expected buffer: 'abcdef', fact: %v", string(l))
+	}
+
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "a" {
+		t.Fatalf("failed test undo(), expected buffer: 'a', fact: %v", string(l))
+	}
+
+	buf.undo()
+	buf.pushBufToUndoRedoBuffer()
+
+	// 全ての undo バッファを引き出した状態
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "" {
+		t.Fatalf("failed test undo(), expected buffer: '', fact: %v", string(l))
+	}
+
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "a" {
+		t.Fatalf("failed test undo(), expected buffer: 'a', fact: %v", string(l))
+	}
+
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "abcdefg" {
+		t.Fatalf("failed test undo(), expected buffer: 'abcdefg', fact: %v", string(l))
+	}
+
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	buf.redo()
+	buf.pushBufToUndoRedoBuffer()
+	l, err = buf.getline(0)
+	if err != nil {
+		t.Fatalf("failed test getline(0), expected: nil, fact: %v", err)
+	}
+	if string(l) != "abcdefg" {
+		t.Fatalf("failed test undo(), expected buffer: 'abcdefg', fact: %v", string(l))
 	}
 }

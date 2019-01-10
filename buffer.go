@@ -3,18 +3,31 @@ package main
 import (
 	"bufio"
 	"errors"
+	_ "fmt"
 	"io"
 	"io/ioutil"
 	"os"
 )
 
 const (
+	// Up is reserved words for commands to move the cursor upward.
 	Up = iota
+	// Down is reserved words for commands to move the cursor downward.
 	Down
+	// Left is reserved words for commands to move the cursor to the left.
 	Left
+	// Right is reserved words for commands to move the cursor to the right.
 	Right
 )
 
+var (
+	// ErrOutRange means variable in out of range
+	ErrOutRange = errors.New("error - variable out of range")
+	// ErrDeleteProhibitedLine means this line is delete prohibited line
+	ErrDeleteProhibitedLine = errors.New("error - this line is delete prohibited line")
+)
+
+// Buffer defines buffer structure
 type Buffer struct {
 	cursor   cursor
 	lines    []*line
@@ -73,6 +86,29 @@ func (b *Buffer) backSpace() {
 			b.cursor.x--
 		}
 	}
+}
+
+func (b *Buffer) deleteLine(n int) error {
+	// Check n
+	if n <= 0 || n > b.getlastlinenum() {
+		return ErrOutRange
+	}
+
+	if b.getlastlinenum() == 1 {
+		b.lines[0].text = []rune{}
+		b.cursor.y = 0
+		b.cursor.x = 0
+	} else {
+		b.lines = append(b.lines[:n], b.lines[n+1:]...)
+		// update cursor position if cursor is in out of buffer lines
+		if b.cursor.y > n {
+			b.cursor.y--
+		}
+		if b.cursor.x > len(b.lines[b.cursor.y].text) {
+			b.cursor.x = len(b.lines[b.cursor.y].text)
+		}
+	}
+	return nil
 }
 
 func (b *Buffer) insertChr(r rune) {
@@ -226,10 +262,10 @@ func (b *Buffer) writeBufToFile() {
 
 func (b *Buffer) getline(n int) ([]rune, error) {
 	if n < 0 {
-		return []rune{}, errors.New("outsideLineNumber")
+		return []rune{}, ErrOutRange
 	}
 	if n > b.getlastlinenum() {
-		return []rune{}, errors.New("outsideLineNumber")
+		return []rune{}, ErrOutRange
 	}
 	return b.lines[n].text, nil
 }
@@ -243,5 +279,9 @@ func newbuffer() *Buffer {
 	buf.redoBuf = &bufStack{}
 	buf.undoBuf = &bufStack{}
 	buf.filename = ""
+	buf.lines = []*line{&line{[]rune{}}}
+	buf.lines[0].text = make([]rune, 0, 0)
+	buf.cursor.x = 0
+	buf.cursor.y = 0
 	return buf
 }

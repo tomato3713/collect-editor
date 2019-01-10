@@ -28,3 +28,10 @@ func (m Mode) String() string {
 		return "Unknown"
 	}
 }
+
+func (m Mode) equal(mode Mode) bool {
+	if m == mode {
+		return true
+	}
+	return false
+}
