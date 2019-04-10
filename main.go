@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	termbox "github.com/nsf/termbox-go"
 )
@@ -82,6 +83,14 @@ mainloop:
 					case ':':
 						mode = Cmd
 						cmdLineWin.focus()
+					case 'k':
+						bufs.moveCursor(Up)
+					case 'j':
+						bufs.moveCursor(Down)
+					case 'h':
+						bufs.moveCursor(Left)
+					case 'l':
+						bufs.moveCursor(Right)
 					case 'i':
 						mode = Edit
 					case 'u':
@@ -123,6 +132,13 @@ mainloop:
 					switch ev.Key {
 					case termbox.KeyEsc:
 						mode = Move
+					case termbox.KeyEnter:
+						// 入力されたコマンドの解析と実行を開始する
+						// quit
+						usrCmd := cmdLineBuf.lines[0].text[1:]
+						if strings.Compare(string(usrCmd), "q") == 0 || strings.Compare(string(usrCmd), "quit") == 0 {
+							break mainloop
+						}
 					default:
 						cmdLineBuf.insertChr(ev.Ch)
 					}
@@ -162,14 +178,18 @@ func startUp() error {
 }
 
 func screenPaint() {
+	// clean all window
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	bufWins.draw()
 	cmdLineWin.draw()
 
+	// 現在のモードに合わせて、カーソルを描く
 	if mode.equal(Cmd) {
 		cmdLineWin.updateCursor()
 	} else {
 		bufWins.updateCursor()
 	}
+
+	// update all window
 	termbox.Flush()
 }
