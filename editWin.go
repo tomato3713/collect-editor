@@ -4,19 +4,19 @@ import (
 	termbox "github.com/nsf/termbox-go"
 )
 
-// BufferWin define window for buffer
-type BufferWin struct {
+// EditWin define window for buffer
+type EditWin struct {
 	window
 	stsLineHeight int
 }
 
-func (w BufferWin) draw() {
+func (w EditWin) draw() {
 	w.updateBufBody()
 	w.drawStatusLine()
 	w.buf.pushBufToUndoRedoBuffer()
 }
 
-func (w BufferWin) drawStatusLine() {
+func (w EditWin) drawStatusLine() {
 	// Write filename on status line
 	fg := termbox.ColorBlack
 	bg := termbox.ColorWhite
@@ -37,12 +37,12 @@ func (w BufferWin) drawStatusLine() {
 	}
 }
 
-func (w BufferWin) focus() {
+func (w EditWin) focus() {
 	w.updateCursor()
 }
 
-func newBufWin(width int, height int, buf *Buffer) *BufferWin {
-	w := new(BufferWin)
+func newEditWin(width int, height int, buf *Buffer) *EditWin {
+	w := new(EditWin)
 	w.buf = buf
 	w.coord.x = 0
 	w.coord.y = 0

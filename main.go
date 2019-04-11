@@ -15,7 +15,7 @@ var (
 	cmdLineBuf *Buffer
 
 	cmdLineWin *CmdLineWin
-	bufWins    *BufferWin
+	editWins   *EditWin
 )
 
 func main() {
@@ -164,8 +164,8 @@ func startUp() error {
 	// Set command line window default value
 	cmdLineWin = newCmdLineWin(w, h, cmdLineBuf)
 
-	// Set bufWins default value
-	bufWins = newBufWin(w, h, bufs)
+	// Set editWins default value
+	editWins = newEditWin(w, h, bufs)
 
 	mode = Move
 	return nil
@@ -174,14 +174,14 @@ func startUp() error {
 func screenPaint() {
 	// clean all window
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
-	bufWins.draw()
+	editWins.draw()
 	cmdLineWin.draw()
 
 	// 現在のモードに合わせて、カーソルを描く
 	if mode.equal(Cmd) {
 		cmdLineWin.updateCursor()
 	} else {
-		bufWins.updateCursor()
+		editWins.updateCursor()
 	}
 
 	// update all window

@@ -32,6 +32,7 @@ func (w window) drawHorizon(sx int, sy int, ex int, ey int, fg termbox.Attribute
 
 func (w window) updateCursor() {
 	termbox.SetCursor(w.buf.cursor.x+w.coord.x, w.buf.cursor.y+w.coord.y)
+	// TODO: ある地点に動いていたら、ウィンドウ全体を動かす
 }
 
 func (w window) updateBufBody() {
@@ -41,7 +42,9 @@ func (w window) updateBufBody() {
 			termbox.SetCell(y, x, rune(0), termbox.ColorWhite, termbox.ColorBlack)
 		}
 	}
-	// Draw text inside this window
+	// TODO: Draw text inside this window
+	// 描画するテキストの範囲を決定する.
+	// Draw text Stage
 	for y, l := range w.buf.lines {
 		for x, r := range l.text {
 			termbox.SetCell(x+w.coord.x, y+w.coord.y, r, termbox.ColorWhite, termbox.ColorBlack)
