@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -15,8 +14,8 @@ var (
 	bufs       *Buffer
 	cmdLineBuf *Buffer
 
-	cmdLineWin CmdLineWin
-	bufWins    BufferWin
+	cmdLineWin *CmdLineWin
+	bufWins    *BufferWin
 )
 
 func main() {
@@ -25,17 +24,11 @@ func main() {
 	}
 	defer termbox.Close()
 
-	mode = Move
-	bufs = newbuffer()
-	cmdLineBuf = newbuffer()
-	bufWins.buf = bufs
-	cmdLineWin.buf = cmdLineBuf
-	fmt.Print(len(os.Args))
 	if len(os.Args) > 1 {
 		bufs.filename = os.Args[1]
 	}
 
-	if bufs.filename == "" {
+	if len(bufs.filename) <= 0 {
 		bufs.filename = "newfile.txt"
 	} else {
 		file, err := os.Open(bufs.filename)
@@ -154,6 +147,7 @@ mainloop:
 }
 
 func startUp() error {
+	// Initialize terminal window
 	err := termbox.Init()
 	if err != nil {
 		return err
@@ -161,19 +155,19 @@ func startUp() error {
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	termbox.SetCursor(0, 0)
 
-	width, height := termbox.Size()
-	// Set CmdLineWin default value
-	cmdLineWin.coord.x = 0
-	cmdLineWin.coord.y = height - cmdLineHeight
-	cmdLineWin.size.width = width
-	cmdLineWin.size.height = cmdLineHeight
+	bufs = newbuffer()
+	cmdLineBuf = newbuffer()
+
+	// get window size
+	w, h := termbox.Size()
+
+	// Set command line window default value
+	cmdLineWin = newCmdLineWin(w, h, cmdLineBuf)
 
 	// Set bufWins default value
-	bufWins.coord.x = 0
-	bufWins.coord.y = 0
-	bufWins.size.width = width
-	bufWins.size.height = height - cmdLineHeight
-	bufWins.stsLineHeight = 1
+	bufWins = newBufWin(w, h, bufs)
+
+	mode = Move
 	return nil
 }
 

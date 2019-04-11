@@ -40,3 +40,14 @@ func (w BufferWin) drawStatusLine() {
 func (w BufferWin) focus() {
 	w.updateCursor()
 }
+
+func newBufWin(width int, height int, buf *Buffer) *BufferWin {
+	w := new(BufferWin)
+	w.buf = buf
+	w.coord.x = 0
+	w.coord.y = 0
+	w.size.width = width
+	w.size.height = height - cmdLineHeight
+	w.stsLineHeight = 1
+	return w
+}
