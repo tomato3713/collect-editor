@@ -1,5 +1,7 @@
 package main
 
+import "github.com/homedm/collect-editor/pkg/buffer"
+
 const (
 	cmdLineHeight = 2
 )
@@ -11,16 +13,16 @@ type CmdLineWin struct {
 
 func (w CmdLineWin) draw() {
 	w.updateBufBody()
-	w.buf.pushBufToUndoRedoBuffer()
+	w.buf.PushBufToUndoRedoBuffer()
 }
 
 func (w CmdLineWin) focus() {
 	// Cmdモードに入ったときに、cmdline Windowの中身を削除する
-	w.buf.deleteLine(1)
-	w.buf.insertChr('>')
+	w.buf.DeleteLine(1)
+	w.buf.InsertChr('>')
 }
 
-func newCmdLineWin(width int, height int, buf *Buffer) *CmdLineWin {
+func newCmdLineWin(width int, height int, buf *buffer.Buffer) *CmdLineWin {
 	w := new(CmdLineWin)
 	w.buf = buf
 	w.coord.x = 0

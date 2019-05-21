@@ -1,9 +1,8 @@
-package main
+package buffer
 
 import (
 	"bufio"
 	"errors"
-	_ "fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -49,7 +48,7 @@ type bufStack struct {
 	bufs []*Buffer
 }
 
-func (b *Buffer) lineFeed() {
+func (b *Buffer) LineFeed() {
 	p := b.cursor.y + 1
 	// split line by the cursor and store these
 	fh, lh := b.lines[b.cursor.y].split(b.cursor.x)
@@ -67,7 +66,7 @@ func (b *Buffer) lineFeed() {
 	b.cursor.y++
 }
 
-func (b *Buffer) backSpace() {
+func (b *Buffer) BackSpace() {
 	if b.cursor.x == 0 && b.cursor.y == 0 {
 		// nothing to do
 	} else {
@@ -88,13 +87,13 @@ func (b *Buffer) backSpace() {
 	}
 }
 
-func (b *Buffer) deleteLine(n int) error {
+func (b *Buffer) DeleteLine(n int) error {
 	// Check n
-	if n <= 0 || n > b.getlastlinenum() {
+	if n <= 0 || n > b.GetLastLineNum() {
 		return ErrOutRange
 	}
 
-	if b.getlastlinenum() == 1 {
+	if b.GetLastLineNum() == 1 {
 		b.lines[0].text = []rune{}
 		b.cursor.y = 0
 		b.cursor.x = 0
@@ -111,12 +110,12 @@ func (b *Buffer) deleteLine(n int) error {
 	return nil
 }
 
-func (b *Buffer) insertChr(r rune) {
-	b.lines[b.cursor.y].insertChr(r, b.cursor.x)
+func (b *Buffer) InsertChr(r rune) {
+	b.lines[b.cursor.y].InsertChr(r, b.cursor.x)
 	b.cursor.x++
 }
 
-func (l *line) insertChr(r rune, p int) {
+func (l *line) InsertChr(r rune, p int) {
 	t := make([]rune, len(l.text), cap(l.text)+1)
 	copy(t, l.text)
 	l.text = append(t[:p+1], t[p:]...)
@@ -128,7 +127,7 @@ func (l *line) deleteChr(p int) {
 	l.text = append(l.text[:p], l.text[p+1:]...)
 }
 
-func (b *Buffer) moveCursor(d int) {
+func (b *Buffer) MoveCursor(d int) {
 	switch d {
 	case Up:
 		// guard of top "rows"
@@ -192,7 +191,7 @@ func (l *line) joint() *line {
 	return nil
 }
 
-func (b *Buffer) pushBufToUndoRedoBuffer() {
+func (b *Buffer) PushBufToUndoRedoBuffer() {
 	tb := new(Buffer)
 	tb.cursor.x = b.cursor.x
 	tb.cursor.y = b.cursor.y
@@ -204,7 +203,7 @@ func (b *Buffer) pushBufToUndoRedoBuffer() {
 	b.undoBuf.bufs = append(b.undoBuf.bufs, tb)
 }
 
-func (b *Buffer) undo() {
+func (b *Buffer) Undo() {
 	if len(b.undoBuf.bufs) == 0 {
 		return
 	}
@@ -223,7 +222,7 @@ func (b *Buffer) undo() {
 	}
 }
 
-func (b *Buffer) redo() {
+func (b *Buffer) Redo() {
 	if len(b.redoBuf.bufs) == 0 {
 		return
 	}
@@ -251,7 +250,7 @@ func (b *Buffer) readFileToBuf(reader io.Reader) error {
 	return nil
 }
 
-func (b *Buffer) writeBufToFile() {
+func (b *Buffer) WriteBufToFile() {
 	content := make([]byte, 1024)
 	for _, l := range b.lines {
 		l.text = append(l.text, '\n')
@@ -260,25 +259,56 @@ func (b *Buffer) writeBufToFile() {
 	ioutil.WriteFile(b.filename, content, os.ModePerm)
 }
 
-func (b *Buffer) getline(n int) ([]rune, error) {
+func (b *Buffer) GetLine(n int) ([]rune, error) {
 	if n < 0 {
 		return []rune{}, ErrOutRange
 	}
-	if n > b.getlastlinenum() {
+	if n > b.GetLastLineNum() {
 		return []rune{}, ErrOutRange
 	}
 	return b.lines[n].text, nil
 }
 
-func (b *Buffer) getlastlinenum() int {
+func (b *Buffer) GetLines() []*line {
+	return b.lines
+}
+
+func (b *Buffer) GetLastLineNum() int {
 	return len(b.lines)
 }
 
-func newbuffer() *Buffer {
+func (b *Buffer) GetCursor() (x int, y int) {
+	x = b.cursor.x
+	y = b.cursor.y
+	return
+}
+
+func (b *Buffer) GetFileName() string {
+	return b.filename
+}
+
+func NewBuffer(fname string) (*Buffer, error) {
 	buf := new(Buffer)
 	buf.redoBuf = &bufStack{}
 	buf.undoBuf = &bufStack{}
-	buf.filename = ""
+	buf.lines = []*line{&line{[]rune{}}}
+	buf.lines[0].text = make([]rune, 0, 0)
+	buf.cursor.x = 0
+	buf.cursor.y = 0
+	buf.filename = fname
+
+	file, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	buf.readFileToBuf(file)
+	return buf, nil
+}
+
+func NewEmptyBuffer() *Buffer {
+	buf := new(Buffer)
+	buf.redoBuf = &bufStack{}
+	buf.undoBuf = &bufStack{}
 	buf.lines = []*line{&line{[]rune{}}}
 	buf.lines[0].text = make([]rune, 0, 0)
 	buf.cursor.x = 0

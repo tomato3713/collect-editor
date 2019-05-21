@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/homedm/collect-editor/pkg/buffer"
+
 	termbox "github.com/nsf/termbox-go"
 )
 
@@ -8,7 +10,7 @@ type window struct {
 	// The coordinates of the upper left corner
 	coord coordinal
 	size  size
-	buf   *Buffer
+	buf   *buffer.Buffer
 }
 
 type coordinal struct {
@@ -31,7 +33,8 @@ func (w window) drawHorizon(sx int, sy int, ex int, ey int, fg termbox.Attribute
 }
 
 func (w window) updateCursor() {
-	termbox.SetCursor(w.buf.cursor.x+w.coord.x, w.buf.cursor.y+w.coord.y)
+	x, y := w.buf.GetCursor()
+	termbox.SetCursor(x+w.coord.x, y+w.coord.y)
 	// TODO: ある地点に動いていたら、ウィンドウ全体を動かす
 }
 
@@ -45,8 +48,13 @@ func (w window) updateBufBody() {
 	// TODO: Draw text inside this window
 	// 描画するテキストの範囲を決定する.
 	// Draw text Stage
-	for y, l := range w.buf.lines {
-		for x, r := range l.text {
+	l := w.buf.GetLastLineNum()
+	for y := 0; y < l; y++ {
+		line, err := w.buf.GetLine(y)
+		if err != nil {
+			return
+		}
+		for x, r := range line {
 			termbox.SetCell(x+w.coord.x, y+w.coord.y, r, termbox.ColorWhite, termbox.ColorBlack)
 		}
 	}

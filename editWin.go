@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/homedm/collect-editor/pkg/buffer"
 	termbox "github.com/nsf/termbox-go"
 )
 
@@ -13,7 +14,7 @@ type EditWin struct {
 func (w EditWin) draw() {
 	w.updateBufBody()
 	w.drawStatusLine()
-	w.buf.pushBufToUndoRedoBuffer()
+	w.buf.PushBufToUndoRedoBuffer()
 }
 
 func (w EditWin) drawStatusLine() {
@@ -24,7 +25,7 @@ func (w EditWin) drawStatusLine() {
 	sx := w.coord.x
 	ex := w.coord.x + w.size.width
 
-	ch := []rune(w.buf.filename)
+	ch := []rune(w.buf.GetFileName())
 
 	i := 0
 	for x := sx; x < ex; x++ {
@@ -41,7 +42,7 @@ func (w EditWin) focus() {
 	w.updateCursor()
 }
 
-func newEditWin(x int, y int, width int, height int, buf *Buffer) *EditWin {
+func newEditWin(x int, y int, width int, height int, buf *buffer.Buffer) *EditWin {
 	w := new(EditWin)
 	w.buf = buf
 	w.coord.x = x

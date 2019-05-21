@@ -5,14 +5,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/homedm/collect-editor/pkg/buffer"
 	termbox "github.com/nsf/termbox-go"
 )
 
 var (
 	mode Mode
 
-	editBufs   *Buffer
-	cmdLineBuf *Buffer
+	editBufs   *buffer.Buffer
+	cmdLineBuf *buffer.Buffer
 
 	cmdLineWin *CmdLineWin
 	editWins   *EditWin
@@ -23,20 +24,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer termbox.Close()
-
-	if len(os.Args) > 1 {
-		editBufs.filename = os.Args[1]
-	}
-
-	if len(editBufs.filename) <= 0 {
-		editBufs.filename = "newfile.txt"
-	} else {
-		file, err := os.Open(editBufs.filename)
-		if err != nil {
-			log.Fatal(err)
-		}
-		editBufs.readFileToBuf(file)
-	}
 
 	screenPaint()
 
@@ -59,15 +46,15 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyArrowUp:
-						editBufs.moveCursor(Up)
+						editBufs.MoveCursor(buffer.Up)
 					case termbox.KeyArrowDown:
-						editBufs.moveCursor(Down)
+						editBufs.MoveCursor(buffer.Down)
 					case termbox.KeyArrowLeft:
-						editBufs.moveCursor(Left)
+						editBufs.MoveCursor(buffer.Left)
 					case termbox.KeyArrowRight:
-						editBufs.moveCursor(Right)
+						editBufs.MoveCursor(buffer.Right)
 					case termbox.KeyCtrlS:
-						editBufs.writeBufToFile()
+						editBufs.WriteBufToFile()
 					case termbox.KeyCtrlC:
 						break mainloop // 実行終了
 					default:
@@ -77,19 +64,19 @@ mainloop:
 						mode = Cmd
 						cmdLineWin.focus()
 					case 'k':
-						editBufs.moveCursor(Up)
+						editBufs.MoveCursor(buffer.Up)
 					case 'j':
-						editBufs.moveCursor(Down)
+						editBufs.MoveCursor(buffer.Down)
 					case 'h':
-						editBufs.moveCursor(Left)
+						editBufs.MoveCursor(buffer.Left)
 					case 'l':
-						editBufs.moveCursor(Right)
+						editBufs.MoveCursor(buffer.Right)
 					case 'i':
 						mode = Edit
 					case 'u':
-						editBufs.undo()
+						editBufs.Undo()
 					case 'r':
-						editBufs.redo()
+						editBufs.Redo()
 					default:
 					}
 				}
@@ -99,18 +86,18 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyEnter:
-						editBufs.lineFeed()
+						editBufs.LineFeed()
 						// mac delete-key is this
 					case termbox.KeyCtrlH:
 						fallthrough
 					case termbox.KeyBackspace2:
-						editBufs.backSpace()
+						editBufs.BackSpace()
 					case termbox.KeyCtrlZ:
-						editBufs.undo()
+						editBufs.Undo()
 					case termbox.KeyCtrlR:
-						editBufs.redo()
+						editBufs.Redo()
 					default:
-						editBufs.insertChr(ev.Ch)
+						editBufs.InsertChr(ev.Ch)
 					}
 				}
 			case Visual:
@@ -128,12 +115,15 @@ mainloop:
 					case termbox.KeyEnter:
 						// 入力されたコマンドの解析と実行を開始する
 						// quit
-						usrCmd := cmdLineBuf.lines[0].text[1:]
-						if strings.Compare(string(usrCmd), "q") == 0 || strings.Compare(string(usrCmd), "quit") == 0 {
+						usrCmd, err := cmdLineBuf.GetLine(0)
+						if err != nil {
+							log.Fatal(err)
+						}
+						if strings.Compare(string(usrCmd[1:]), "q") == 0 || strings.Compare(string(usrCmd), "quit") == 0 {
 							break mainloop
 						}
 					default:
-						cmdLineBuf.insertChr(ev.Ch)
+						cmdLineBuf.InsertChr(ev.Ch)
 					}
 				}
 			default:
@@ -155,8 +145,18 @@ func startUp() error {
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	termbox.SetCursor(0, 0)
 
-	editBufs = newbuffer()
-	cmdLineBuf = newbuffer()
+	if len(os.Args) > 1 {
+		fname := os.Args[1]
+		editBufs, err = buffer.NewBuffer(fname)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		editBufs = buffer.NewEmptyBuffer()
+	}
+
+	editBufs = buffer.NewEmptyBuffer()
+	cmdLineBuf = buffer.NewEmptyBuffer()
 
 	// get window size
 	w, h := termbox.Size()
