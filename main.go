@@ -179,9 +179,9 @@ func screenPaint() {
 
 	// 現在のモードに合わせて、カーソルを描く
 	if mode.equal(Cmd) {
-		cmdLineWin.updateCursor()
+		cmdLineWin.UpdateCursor()
 	} else {
-		editWins.updateCursor()
+		editWins.UpdateCursor()
 	}
 
 	// update all window
