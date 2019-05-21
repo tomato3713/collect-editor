@@ -41,11 +41,11 @@ func (w EditWin) focus() {
 	w.updateCursor()
 }
 
-func newEditWin(width int, height int, buf *Buffer) *EditWin {
+func newEditWin(x int, y int, width int, height int, buf *Buffer) *EditWin {
 	w := new(EditWin)
 	w.buf = buf
-	w.coord.x = 0
-	w.coord.y = 0
+	w.coord.x = x
+	w.coord.y = y
 	w.size.width = width
 	w.size.height = height - cmdLineHeight
 	w.stsLineHeight = 1

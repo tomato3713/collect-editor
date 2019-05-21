@@ -11,7 +11,7 @@ import (
 var (
 	mode Mode
 
-	bufs       *Buffer
+	editBufs   *Buffer
 	cmdLineBuf *Buffer
 
 	cmdLineWin *CmdLineWin
@@ -25,17 +25,17 @@ func main() {
 	defer termbox.Close()
 
 	if len(os.Args) > 1 {
-		bufs.filename = os.Args[1]
+		editBufs.filename = os.Args[1]
 	}
 
-	if len(bufs.filename) <= 0 {
-		bufs.filename = "newfile.txt"
+	if len(editBufs.filename) <= 0 {
+		editBufs.filename = "newfile.txt"
 	} else {
-		file, err := os.Open(bufs.filename)
+		file, err := os.Open(editBufs.filename)
 		if err != nil {
 			log.Fatal(err)
 		}
-		bufs.readFileToBuf(file)
+		editBufs.readFileToBuf(file)
 	}
 
 	screenPaint()
@@ -59,15 +59,15 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyArrowUp:
-						bufs.moveCursor(Up)
+						editBufs.moveCursor(Up)
 					case termbox.KeyArrowDown:
-						bufs.moveCursor(Down)
+						editBufs.moveCursor(Down)
 					case termbox.KeyArrowLeft:
-						bufs.moveCursor(Left)
+						editBufs.moveCursor(Left)
 					case termbox.KeyArrowRight:
-						bufs.moveCursor(Right)
+						editBufs.moveCursor(Right)
 					case termbox.KeyCtrlS:
-						bufs.writeBufToFile()
+						editBufs.writeBufToFile()
 					case termbox.KeyCtrlC:
 						break mainloop // 実行終了
 					default:
@@ -77,19 +77,19 @@ mainloop:
 						mode = Cmd
 						cmdLineWin.focus()
 					case 'k':
-						bufs.moveCursor(Up)
+						editBufs.moveCursor(Up)
 					case 'j':
-						bufs.moveCursor(Down)
+						editBufs.moveCursor(Down)
 					case 'h':
-						bufs.moveCursor(Left)
+						editBufs.moveCursor(Left)
 					case 'l':
-						bufs.moveCursor(Right)
+						editBufs.moveCursor(Right)
 					case 'i':
 						mode = Edit
 					case 'u':
-						bufs.undo()
+						editBufs.undo()
 					case 'r':
-						bufs.redo()
+						editBufs.redo()
 					default:
 					}
 				}
@@ -99,18 +99,18 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyEnter:
-						bufs.lineFeed()
+						editBufs.lineFeed()
 						// mac delete-key is this
 					case termbox.KeyCtrlH:
 						fallthrough
 					case termbox.KeyBackspace2:
-						bufs.backSpace()
+						editBufs.backSpace()
 					case termbox.KeyCtrlZ:
-						bufs.undo()
+						editBufs.undo()
 					case termbox.KeyCtrlR:
-						bufs.redo()
+						editBufs.redo()
 					default:
-						bufs.insertChr(ev.Ch)
+						editBufs.insertChr(ev.Ch)
 					}
 				}
 			case Visual:
@@ -155,7 +155,7 @@ func startUp() error {
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	termbox.SetCursor(0, 0)
 
-	bufs = newbuffer()
+	editBufs = newbuffer()
 	cmdLineBuf = newbuffer()
 
 	// get window size
@@ -165,7 +165,7 @@ func startUp() error {
 	cmdLineWin = newCmdLineWin(w, h, cmdLineBuf)
 
 	// Set editWins default value
-	editWins = newEditWin(w, h, bufs)
+	editWins = newEditWin(0, 0, w, h, editBufs)
 
 	mode = Move
 	return nil
