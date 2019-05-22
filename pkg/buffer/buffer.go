@@ -28,14 +28,14 @@ var (
 
 // Buffer defines buffer structure
 type Buffer struct {
-	cursor   cursor
+	pos      position
 	lines    []*line
 	filename string
 	undoBuf  *bufStack
 	redoBuf  *bufStack
 }
 
-type cursor struct {
+type position struct {
 	x int
 	y int
 }
@@ -48,41 +48,41 @@ type bufStack struct {
 	bufs []*Buffer
 }
 
-func (b *Buffer) LineFeed() {
-	p := b.cursor.y + 1
+func (buf *Buffer) LineFeed() {
+	p := buf.pos.y + 1
 	// split line by the cursor and store these
-	fh, lh := b.lines[b.cursor.y].split(b.cursor.x)
+	fh, lh := buf.lines[buf.pos.y].split(buf.pos.x)
 
-	t := make([]*line, len(b.lines), cap(b.lines)+1)
-	copy(t, b.lines)
-	b.lines = append(t[:p+1], t[p:]...)
-	b.lines[p] = new(line)
+	t := make([]*line, len(buf.lines), cap(buf.lines)+1)
+	copy(t, buf.lines)
+	buf.lines = append(t[:p+1], t[p:]...)
+	buf.lines[p] = new(line)
 
-	// write back previous line and newline
-	b.lines[p-1].text = fh
-	b.lines[p].text = lh
+	// write bufack previous line and newline
+	buf.lines[p-1].text = fh
+	buf.lines[p].text = lh
 
-	b.cursor.x = 0
-	b.cursor.y++
+	buf.pos.x = 0
+	buf.pos.y++
 }
 
 func (b *Buffer) BackSpace() {
-	if b.cursor.x == 0 && b.cursor.y == 0 {
+	if b.pos.x == 0 && b.pos.y == 0 {
 		// nothing to do
 	} else {
-		if b.cursor.x == 0 {
+		if b.pos.x == 0 {
 			// stre current line
-			t := b.lines[b.cursor.y].text
+			t := b.lines[b.pos.y].text
 			// delete current line
-			b.lines = append(b.lines[:b.cursor.y], b.lines[b.cursor.y+1:]...)
-			b.cursor.y--
+			b.lines = append(b.lines[:b.pos.y], b.lines[b.pos.y+1:]...)
+			b.pos.y--
 			// join stored lines to previous line-end
-			plen := b.lines[b.cursor.y].text
-			b.lines[b.cursor.y].text = append(b.lines[b.cursor.y].text, t...)
-			b.cursor.x = len(plen)
+			plen := b.lines[b.pos.y].text
+			b.lines[b.pos.y].text = append(b.lines[b.pos.y].text, t...)
+			b.pos.x = len(plen)
 		} else {
-			b.lines[b.cursor.y].deleteChr(b.cursor.x)
-			b.cursor.x--
+			b.lines[b.pos.y].deleteChr(b.pos.x)
+			b.pos.x--
 		}
 	}
 }
@@ -95,24 +95,24 @@ func (b *Buffer) DeleteLine(n int) error {
 
 	if b.GetLastLineNum() == 1 {
 		b.lines[0].text = []rune{}
-		b.cursor.y = 0
-		b.cursor.x = 0
+		b.pos.y = 0
+		b.pos.x = 0
 	} else {
 		b.lines = append(b.lines[:n], b.lines[n+1:]...)
-		// update cursor position if cursor is in out of buffer lines
-		if b.cursor.y > n {
-			b.cursor.y--
+		// update pos position if pos is in out of buffer lines
+		if b.pos.y > n {
+			b.pos.y--
 		}
-		if b.cursor.x > len(b.lines[b.cursor.y].text) {
-			b.cursor.x = len(b.lines[b.cursor.y].text)
+		if b.pos.x > len(b.lines[b.pos.y].text) {
+			b.pos.x = len(b.lines[b.pos.y].text)
 		}
 	}
 	return nil
 }
 
 func (b *Buffer) InsertChr(r rune) {
-	b.lines[b.cursor.y].InsertChr(r, b.cursor.x)
-	b.cursor.x++
+	b.lines[b.pos.y].InsertChr(r, b.pos.x)
+	b.pos.x++
 }
 
 func (l *line) InsertChr(r rune, p int) {
@@ -127,47 +127,47 @@ func (l *line) deleteChr(p int) {
 	l.text = append(l.text[:p], l.text[p+1:]...)
 }
 
-func (b *Buffer) MoveCursor(d int) {
+func (b *Buffer) MovePos(d int) {
 	switch d {
 	case Up:
 		// guard of top "rows"
-		if b.cursor.y > 0 {
-			b.cursor.y--
+		if b.pos.y > 0 {
+			b.pos.y--
 			// guard of end of "row"
-			if b.cursor.x > len(b.lines[b.cursor.y].text) {
-				b.cursor.x = len(b.lines[b.cursor.y].text)
+			if b.pos.x > len(b.lines[b.pos.y].text) {
+				b.pos.x = len(b.lines[b.pos.y].text)
 			}
 		}
 		break
 	case Down:
 		// guard of end of "rows"
-		if b.cursor.y < b.linenum()-1 {
-			b.cursor.y++
+		if b.pos.y < b.linenum()-1 {
+			b.pos.y++
 			// guard of end of "row"
-			if b.cursor.x > len(b.lines[b.cursor.y].text) {
-				b.cursor.x = len(b.lines[b.cursor.y].text)
+			if b.pos.x > len(b.lines[b.pos.y].text) {
+				b.pos.x = len(b.lines[b.pos.y].text)
 			}
 		}
 		break
 	case Left:
-		if b.cursor.x > 0 {
-			b.cursor.x--
+		if b.pos.x > 0 {
+			b.pos.x--
 		} else {
 			// guard of top of "rows"
-			if b.cursor.y > 0 {
-				b.cursor.y--
-				b.cursor.x = len(b.lines[b.cursor.y].text)
+			if b.pos.y > 0 {
+				b.pos.y--
+				b.pos.x = len(b.lines[b.pos.y].text)
 			}
 		}
 		break
 	case Right:
-		if b.cursor.x < b.lines[b.cursor.y].runenum() {
-			b.cursor.x++
+		if b.pos.x < b.lines[b.pos.y].runenum() {
+			b.pos.x++
 		} else {
 			// guard of end of "rows"
-			if b.cursor.y < b.linenum()-1 {
-				b.cursor.x = 0
-				b.cursor.y++
+			if b.pos.y < b.linenum()-1 {
+				b.pos.x = 0
+				b.pos.y++
 			}
 		}
 		break
@@ -193,8 +193,8 @@ func (l *line) joint() *line {
 
 func (b *Buffer) PushBufToUndoRedoBuffer() {
 	tb := new(Buffer)
-	tb.cursor.x = b.cursor.x
-	tb.cursor.y = b.cursor.y
+	tb.pos.x = b.pos.x
+	tb.pos.y = b.pos.y
 	for i, l := range b.lines {
 		tl := new(line)
 		tb.lines = append(tb.lines, tl)
@@ -213,8 +213,8 @@ func (b *Buffer) Undo() {
 	}
 	tb := b.undoBuf.bufs[len(b.undoBuf.bufs)-1]
 	b.undoBuf.bufs = b.undoBuf.bufs[:len(b.undoBuf.bufs)-1]
-	b.cursor.x = tb.cursor.x
-	b.cursor.y = tb.cursor.y
+	b.pos.x = tb.pos.x
+	b.pos.y = tb.pos.y
 	for i, l := range tb.lines {
 		tl := new(line)
 		b.lines = append(b.lines, tl)
@@ -228,8 +228,8 @@ func (b *Buffer) Redo() {
 	}
 	tb := b.redoBuf.bufs[len(b.redoBuf.bufs)-1]
 	b.redoBuf.bufs = b.redoBuf.bufs[:len(b.redoBuf.bufs)-1]
-	b.cursor.x = tb.cursor.x
-	b.cursor.y = tb.cursor.y
+	b.pos.x = tb.pos.x
+	b.pos.y = tb.pos.y
 	for i, l := range tb.lines {
 		tl := new(line)
 		b.lines = append(b.lines, tl)
@@ -277,9 +277,9 @@ func (b *Buffer) GetLastLineNum() int {
 	return len(b.lines)
 }
 
-func (b *Buffer) GetCursor() (x int, y int) {
-	x = b.cursor.x
-	y = b.cursor.y
+func (b *Buffer) GetPos() (x int, y int) {
+	x = b.pos.x
+	y = b.pos.y
 	return
 }
 
@@ -293,8 +293,8 @@ func NewBuffer(fname string) (*Buffer, error) {
 	buf.undoBuf = &bufStack{}
 	buf.lines = []*line{&line{[]rune{}}}
 	buf.lines[0].text = make([]rune, 0, 0)
-	buf.cursor.x = 0
-	buf.cursor.y = 0
+	buf.pos.x = 0
+	buf.pos.y = 0
 	buf.filename = fname
 
 	file, err := os.Open(fname)
@@ -311,7 +311,7 @@ func NewEmptyBuffer() *Buffer {
 	buf.undoBuf = &bufStack{}
 	buf.lines = []*line{&line{[]rune{}}}
 	buf.lines[0].text = make([]rune, 0, 0)
-	buf.cursor.x = 0
-	buf.cursor.y = 0
+	buf.pos.x = 0
+	buf.pos.y = 0
 	return buf
 }

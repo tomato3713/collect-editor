@@ -33,7 +33,7 @@ func (w Window) drawHorizon(sx int, sy int, ex int, ey int, fg termbox.Attribute
 }
 
 func (w Window) UpdateCursor() {
-	x, y := w.Buf.GetCursor()
+	x, y := w.Buf.GetPos()
 	termbox.SetCursor(x+w.Coord.X, y+w.Coord.Y)
 	// TODO: ある地点に動いていたら、ウィンドウ全体を動かす
 }

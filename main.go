@@ -46,13 +46,13 @@ mainloop:
 					case termbox.KeyEsc:
 						mode = Move
 					case termbox.KeyArrowUp:
-						editBufs.MoveCursor(buffer.Up)
+						editBufs.MovePos(buffer.Up)
 					case termbox.KeyArrowDown:
-						editBufs.MoveCursor(buffer.Down)
+						editBufs.MovePos(buffer.Down)
 					case termbox.KeyArrowLeft:
-						editBufs.MoveCursor(buffer.Left)
+						editBufs.MovePos(buffer.Left)
 					case termbox.KeyArrowRight:
-						editBufs.MoveCursor(buffer.Right)
+						editBufs.MovePos(buffer.Right)
 					case termbox.KeyCtrlS:
 						editBufs.WriteBufToFile()
 					case termbox.KeyCtrlC:
@@ -64,13 +64,13 @@ mainloop:
 						mode = Cmd
 						cmdLineWin.focus()
 					case 'k':
-						editBufs.MoveCursor(buffer.Up)
+						editBufs.MovePos(buffer.Up)
 					case 'j':
-						editBufs.MoveCursor(buffer.Down)
+						editBufs.MovePos(buffer.Down)
 					case 'h':
-						editBufs.MoveCursor(buffer.Left)
+						editBufs.MovePos(buffer.Left)
 					case 'l':
-						editBufs.MoveCursor(buffer.Right)
+						editBufs.MovePos(buffer.Right)
 					case 'i':
 						mode = Edit
 					case 'u':
