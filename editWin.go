@@ -13,12 +13,11 @@ type EditWin struct {
 }
 
 func (w EditWin) draw() {
-	w.UpdateBufBody()
-	w.drawStatusLine()
-	w.Buf.PushBufToUndoRedoBuffer()
+	w.Draw()
+	w.DrawStatusLine()
 }
 
-func (w EditWin) drawStatusLine() {
+func (w EditWin) DrawStatusLine() {
 	// Write filename on status line
 	fg := termbox.ColorBlack
 	bg := termbox.ColorWhite
@@ -39,11 +38,7 @@ func (w EditWin) drawStatusLine() {
 	}
 }
 
-func (w EditWin) focus() {
-	w.UpdateCursor()
-}
-
-func newEditWin(x int, y int, width int, height int, buf *buffer.Buffer) *EditWin {
+func NewEditWin(x int, y int, width int, height int, buf *buffer.Buffer) *EditWin {
 	w := new(EditWin)
 	w.Buf = buf
 	w.Coord.X = x

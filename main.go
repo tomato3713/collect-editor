@@ -62,7 +62,7 @@ mainloop:
 					switch ev.Ch {
 					case ':':
 						mode = Cmd
-						cmdLineWin.focus()
+						cmdLineWin.Focus()
 					case 'k':
 						editBufs.MovePos(buffer.Up)
 					case 'j':
@@ -162,10 +162,10 @@ func startUp() error {
 	w, h := termbox.Size()
 
 	// Set command line window default value
-	cmdLineWin = newCmdLineWin(w, h, cmdLineBuf)
+	cmdLineWin = NewCmdLineWin(w, h, cmdLineBuf)
 
 	// Set editWins default value
-	editWins = newEditWin(0, 0, w, h, editBufs)
+	editWins = NewEditWin(0, 0, w, h, editBufs)
 
 	mode = Move
 	return nil
@@ -175,7 +175,7 @@ func screenPaint() {
 	// clean all window
 	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
 	editWins.draw()
-	cmdLineWin.draw()
+	cmdLineWin.Draw()
 
 	// 現在のモードに合わせて、カーソルを描く
 	if mode.equal(Cmd) {
