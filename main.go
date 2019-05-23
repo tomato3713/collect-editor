@@ -179,11 +179,6 @@ func drawCursor() {
 }
 
 func screenPaint() {
-	// clean all window
-	// termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
-	//editWins.draw()
-	//cmdLineWin.Draw()
-
 	cmdLineWin.Redraw()
 	editWins.Draw()
 

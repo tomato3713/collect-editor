@@ -46,7 +46,6 @@ func (w Window) scroll() {
 }
 
 func (w Window) UpdateCursor() {
-	w.scroll()
 	x, y := w.getCursorPos()
 
 	DrawCursor(x+w.Coord.X, y+w.Coord.Y)
@@ -75,9 +74,10 @@ func (w Window) checkInside(x int, y int) (ok bool) {
 
 func (w Window) UpdateBufBody() {
 	w.clear()
+	w.scroll()
 	// TODO: Draw text inside this window
 	// Draw text Stage
-	for y := w.Coord.Y; y < w.Size.Height+w.Coord.Y; y++ {
+	for y := w.Coord.Y; y < w.Coord.Y+w.Size.Height; y++ {
 		line, err := w.Buf.GetLine(w.Top + y - w.Coord.Y)
 		if err != nil {
 			return
