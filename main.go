@@ -155,34 +155,40 @@ func startUp() error {
 		editBufs = buffer.NewEmptyBuffer()
 	}
 
-	editBufs = buffer.NewEmptyBuffer()
 	cmdLineBuf = buffer.NewEmptyBuffer()
 
 	// get window size
 	w, h := termbox.Size()
 
 	// Set command line window default value
-	cmdLineWin = NewCmdLineWin(w, h, cmdLineBuf)
+	cmdLineWin = NewCmdLineWin(w, 2, cmdLineBuf)
 
 	// Set editWins default value
-	editWins = NewEditWin(0, 0, w, h, editBufs)
+	editWins = NewEditWin(0, 0, w, h-cmdLineWin.Size.Height, editBufs)
 
 	mode = Move
 	return nil
 }
 
-func screenPaint() {
-	// clean all window
-	termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
-	editWins.draw()
-	cmdLineWin.Draw()
-
-	// 現在のモードに合わせて、カーソルを描く
+func drawCursor() {
 	if mode.equal(Cmd) {
 		cmdLineWin.UpdateCursor()
 	} else {
 		editWins.UpdateCursor()
 	}
+}
+
+func screenPaint() {
+	// clean all window
+	// termbox.Clear(termbox.ColorWhite, termbox.ColorBlack)
+	//editWins.draw()
+	//cmdLineWin.Draw()
+
+	cmdLineWin.Redraw()
+	editWins.Draw()
+
+	// 現在のモードに合わせて、カーソルを描く
+	drawCursor()
 
 	// update all window
 	termbox.Flush()

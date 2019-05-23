@@ -263,14 +263,10 @@ func (b *Buffer) GetLine(n int) ([]rune, error) {
 	if n < 0 {
 		return []rune{}, ErrOutRange
 	}
-	if n > b.GetLastLineNum() {
+	if n >= b.GetLastLineNum() {
 		return []rune{}, ErrOutRange
 	}
 	return b.lines[n].text, nil
-}
-
-func (b *Buffer) GetLines() []*line {
-	return b.lines
 }
 
 func (b *Buffer) GetLastLineNum() int {

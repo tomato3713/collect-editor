@@ -12,6 +12,7 @@ type Window struct {
 	Coord Coordinal
 	Size  Size
 	Buf   *buffer.Buffer
+	Top   int
 }
 
 // Coordinal is coordinal struct
@@ -26,9 +27,29 @@ type Size struct {
 	Height int
 }
 
+func (w Window) getCursorPos() (x int, y int) {
+	// ウィンドウ上の位置を計算する。
+	// 左上 0, 0 とする
+	x, y = w.Buf.GetPos()
+	y = y - w.Top
+	return
+}
+
+func (w Window) scroll() {
+	_, y := w.getCursorPos()
+	if y < 0 {
+		w.Top--
+	}
+	if y >= w.Size.Height {
+		w.Top++
+	}
+}
+
 func (w Window) UpdateCursor() {
-	x, y := w.Buf.GetPos()
-	termbox.SetCursor(x+w.Coord.X, y+w.Coord.Y)
+	w.scroll()
+	x, y := w.getCursorPos()
+
+	DrawCursor(x+w.Coord.X, y+w.Coord.Y)
 }
 
 // Focus is focus the window
@@ -54,18 +75,15 @@ func (w Window) checkInside(x int, y int) (ok bool) {
 
 func (w Window) UpdateBufBody() {
 	w.clear()
-
 	// TODO: Draw text inside this window
 	// Draw text Stage
-	bufLen := w.Buf.GetLastLineNum()
-
-	for y := 0; y < bufLen; y++ {
-		line, err := w.Buf.GetLine(y)
+	for y := w.Coord.Y; y < w.Size.Height+w.Coord.Y; y++ {
+		line, err := w.Buf.GetLine(w.Top + y - w.Coord.Y)
 		if err != nil {
 			return
 		}
-		for x, r := range line {
-			DrawChr(x+w.Coord.X, y+w.Coord.Y, r, termbox.ColorWhite, termbox.ColorBlack)
+		for x, c := range line {
+			DrawChr(x+w.Coord.X, y, c, termbox.ColorWhite, termbox.ColorBlack)
 		}
 	}
 }
@@ -74,7 +92,7 @@ func (w Window) clear() {
 	// Clear inside this window
 	for y := w.Coord.Y; y < w.Coord.Y+w.Size.Height; y++ {
 		for x := w.Coord.X; x < w.Coord.X+w.Size.Width; x++ {
-			termbox.SetCell(y, x, rune(0), termbox.ColorWhite, termbox.ColorBlack)
+			DrawChr(x, y, rune(0), termbox.ColorWhite, termbox.ColorBlack)
 		}
 	}
 }
