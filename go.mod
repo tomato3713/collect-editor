@@ -1,8 +1,13 @@
-module github.com/homedm/collect-editor
+module github.com/tomato3713/collect-editor
 
-go 1.13
+go 1.22.2
 
 require (
-	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/nsf/termbox-go v0.0.0-20190325093121-288510b9734e
+	github.com/homedm/collect-editor v0.0.0-20190523021620-c4dc7990226f
+	github.com/nsf/termbox-go v1.1.1
+)
+
+require (
+	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 )
